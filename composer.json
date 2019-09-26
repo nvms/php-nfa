@@ -1,7 +1,10 @@
 {
     "name": "nvms/php-nfa",
+    "type": "library",
     "description": "Nondeterministic state machine",
     "keywords": ["nfa", "state-machine"],
+    "homepage": "http://github.com/nvms/php-nfa",
+    "version": "1.0.0",
     "license": "MIT",
     "require": {
         "php": "^7.2"
