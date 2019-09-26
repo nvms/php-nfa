@@ -102,10 +102,7 @@ class StateMachine
 
                     if ($inState) {
                         ++$met;
-                        // echo "State condition met: [" . $state . "]" . PHP_EOL;
                         continue;
-                    } else {
-                        // echo "State condition NOT MET: [" . $state . "]" . PHP_EOL;
                     }
                 }
             }
@@ -116,9 +113,6 @@ class StateMachine
 
                 if ($truthiness) {
                     ++$met;
-                // echo 'Value condition met: (' . $condition . ') : (' . $str . ')' . PHP_EOL;
-                } else {
-                    // echo 'Value condition NOT MET: (' . $condition . ') : (' . $str . ')' . PHP_EOL;
                 }
             }
         }
@@ -142,8 +136,6 @@ class StateMachine
 
                 if (\preg_match_all('/<(.*?)>/', $operation, $m)) {
                     foreach ($m[1] as $i => $variable) {
-                        // Get the name of the variable, then get a reference to
-                        // that class's instance of the variable
                         $ref = new \ReflectionClass($this);
                         $property = $ref->getProperty($variable);
                         $property->setAccessible(true);
@@ -154,7 +146,6 @@ class StateMachine
                         $desiredValue = preg_match('/=(.+)/', $operation, $desiredValueMatches);
 
                         if ($desiredValueMatches) {
-                            // {hunger} - 25
                             $valStr = $desiredValueMatches[1];
 
                             /*
@@ -171,7 +162,6 @@ class StateMachine
                              */
                             $eval = 'return '.$valStr.';';
                             $newValue = eval($eval);
-                            // echo "Setting " . $m[0][$i] . " to: " . $valStr . ' (' . $newValue . ')' . PHP_EOL;
                             $property->setValue($this, $newValue);
                         }
                     }
@@ -190,10 +180,10 @@ class StateMachine
     {
         $stateCopy = $this->states;
 
-        // echo PHP_EOL . "###########################" . PHP_EOL;
-
-        // Before we check for possible transitions, we should handle
-        // any StateTicks, if we have any.
+        /**
+         * Before we check for possible transitions, we should handle
+         * any StateTicks if we have any.
+         */
         foreach ($this->stateTicks as $tick) {
             if (array_key_exists($tick->state, $this->states)) {
                 $start = strtotime($tick->lastTick);
@@ -212,33 +202,17 @@ class StateMachine
         }
 
         foreach ($this->transitions as $transition) {
-            // echo "------" . PHP_EOL;
-            // echo "Evaluating transition: <" . $this->getStateNameById($transition->from) . "> to <" . $this->getStateNameById($transition->to) . ">" . PHP_EOL;
-
             if (array_key_exists($transition->from, $this->states) || null === $transition->from) {
-                // echo "We are in the correct state for this transition to occur" . PHP_EOL;
-
                 if ($this->conditionsMet($transition->conditions)) {
-                    // echo "All conditions met" . PHP_EOL;
-
                     if (null !== $transition->from) {
-                        // echo "Removing state <" . $this->getStateNameById($transition->from) . "> from current states" . PHP_EOL;
-
-                        // $key = array_search($transition->from, $this->states);
-                        // unset($this->states[$key]);
                         unset($this->states[$transition->from]);
-                        // unset($this->stateTimes[$transition->from]);
                     }
 
                     if (!in_array($transition->to, $this->states) && null !== $transition->to) {
-                        // echo "Adding state <" . $this->getStateNameById($transition->to) . "> to list of current states" . PHP_EOL;
-                        // array_push($this->states, $transition->to);
-                        // $this->stateTimes[$transition->to] = date('Y-m-d H:i:s');
                         $this->states[$transition->to] = date('Y-m-d H:i:s');
                     }
 
                     if ($transition->postTransition) {
-                        // echo "Handling PostTransition operations" . PHP_EOL;
                         $this->doPostTransition($transition->postTransition);
                     }
                 }
