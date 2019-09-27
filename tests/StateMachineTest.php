@@ -345,4 +345,24 @@ final class HumanTest extends TestCase
         $this->assertTrue($called);
         $this->assertEquals(0, $human->sleepiness);
     }
+
+    public function test_notInStateCondition(): void
+    {
+        $human = new Human();
+
+        $human->addTransition(
+            new Transition(
+                Human::ASLEEP,
+                Human::AWAKE,
+                new Condition('[!ALIVE]')
+            )
+        );
+
+        $this->assertTrue($human->is(Human::ALIVE));
+        $this->assertTrue($human->is(Human::ASLEEP));
+        $this->assertTrue($human->not(Human::AWAKE));
+        $human->turn();
+        $this->assertTrue($human->is(Human::ASLEEP));
+        $this->assertTrue($human->not(Human::AWAKE));
+    }
 }
