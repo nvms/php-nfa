@@ -59,6 +59,11 @@ class StateMachine
         return array_key_exists($state, $this->states);
     }
 
+    public function not($state)
+    {
+        return !array_key_exists($state, $this->states);
+    }
+
     public function getStateNameById($state)
     {
         if (null === $state) {
@@ -98,7 +103,13 @@ class StateMachine
                 foreach ($m[1] as $i => $state) {
                     // https://stackoverflow.com/a/28582713
                     $ref = new \ReflectionClass($this);
-                    $inState = $this->is($ref->getConstant($state));
+
+                    if ($state[0] === '!') {
+                        $withoutExclamation = substr($state, 1);
+                        $inState = $this->not($ref->getConstant($withoutExclamation));
+                    } else {
+                        $inState = $this->is($ref->getConstant($state));
+                    }
 
                     if ($inState) {
                         ++$met;
