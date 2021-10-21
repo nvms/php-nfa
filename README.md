@@ -27,6 +27,7 @@ Expressive non-deterministic state machines.
 ### Extending the `StateMachine` class
 
 ```php
+<?php
 class Human extends StateMachine
 {
     /**
@@ -63,6 +64,7 @@ class Human extends StateMachine
 The machine defined above will be in three states when it is created. Consider this passing test:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_initialStates(): void
@@ -86,6 +88,7 @@ final class HumanTest extends PHPUnit\Framework\TestCase
 Transitions can be assigned to objects that extend StateMachine. Consider this passing test:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_addTransition(): void
@@ -125,6 +128,7 @@ your object so that it will consider and validate transition conditions.
 Expanding on the previous test:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_addTransition(): void
@@ -164,6 +168,7 @@ Let's say you want to modify the value of `sleepiness` after the transition defi
 is processed. Consider the following:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_postTransition(): void
@@ -191,6 +196,7 @@ final class HumanTest extends PHPUnit\Framework\TestCase
 You can also pass a callable to `PostTransition`. For example:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_postTransitionCallback(): void
@@ -227,6 +233,7 @@ You might be asking yourself: "What's the point of that?". Good question! Those 
 be used in your `Condition` expressions. Consider the following:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_transitionCondition(): void
@@ -273,6 +280,7 @@ means that all defined transitions, current state, current variable values are c
 along with it:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_deepCopy(): void
@@ -301,6 +309,7 @@ Using a `StateTick` you can define an operation expression that is eval'd after
 an interval amount of time while a defined state is active. Consider the following test:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_stateTick(): void
@@ -343,6 +352,7 @@ there's a better way to handle this, but we'll get into that later.
 Consider the following test:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_statePreservation(): void
@@ -427,6 +437,7 @@ final class HumanTest extends PHPUnit\Framework\TestCase
 Alternatively, if you're using PHP in your CLI, you should use `StateMachine`'s `activate` method:
 
 ```php
+<?php
 final class HumanTest extends PHPUnit\Framework\TestCase
 {
     public function test_activate(): void
