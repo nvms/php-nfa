@@ -20,7 +20,7 @@ class StateMachine
     /** @var int time in ms between update ticks */
     public $tickRate = 1000;
 
-    public $stateTimes;
+    public $stateTicks;
 
     public function __construct()
     {
@@ -85,7 +85,6 @@ class StateMachine
 
     public function conditionsMet(Condition $conditions)
     {
-        $numConditions = count($conditions->conditions);
         $met = 0;
 
         foreach ($conditions->conditions as $condition) {
@@ -101,38 +100,39 @@ class StateMachine
 
             if (\preg_match_all("/\[(.*?)\]/", $condition, $m)) {
                 foreach ($m[1] as $i => $state) {
-                    // https://stackoverflow.com/a/28582713
-                    $ref = new \ReflectionClass($this);
+                    $inState = $this->isState($state);
 
-                    if ($state[0] === '!') {
-                        $withoutExclamation = substr($state, 1);
-                        $inState = $this->not($ref->getConstant($withoutExclamation));
-                    } else {
-                        $inState = $this->is($ref->getConstant($state));
+                    if ('!' === $state[0]) {
+                        $inState = !$inState;
+                        $state = substr($state, 1);
                     }
 
                     if ($inState) {
                         ++$met;
-                        continue;
                     }
                 }
             }
 
-            if ($expression) {
-                $eval = 'return '.$str.';';
-                $truthiness = eval($eval);
-
-                if ($truthiness) {
-                    ++$met;
-                }
+            if ($expression && $this->evaluateExpression($str)) {
+                ++$met;
             }
         }
 
-        if ($numConditions == $met) {
-            return true;
-        }
+        return count($conditions->conditions) === $met;
+    }
 
-        return false;
+    private function isState($state)
+    {
+        $ref = new \ReflectionClass($this);
+
+        return $this->is($ref->getConstant($state));
+    }
+
+    private function evaluateExpression($str)
+    {
+        $eval = 'return '.$str.';';
+
+        return eval($eval);
     }
 
     public function doPostTransition(PostTransition $postTransition)
@@ -142,39 +142,22 @@ class StateMachine
                 call_user_func($operation);
             }
 
-            if (is_string($operation)) {
-                $str = $operation;
+            if (is_string($operation) && preg_match_all('/<(.*?)>/', $operation, $matches)) {
+                foreach ($matches[1] as $variable) {
+                    $property = (new \ReflectionClass($this))->getProperty($variable);
+                    $property->setAccessible(true);
 
-                if (\preg_match_all('/<(.*?)>/', $operation, $m)) {
-                    foreach ($m[1] as $i => $variable) {
-                        $ref = new \ReflectionClass($this);
-                        $property = $ref->getProperty($variable);
-                        $property->setAccessible(true);
+                    if (preg_match('/=(.+)/', $operation, $desiredValueMatches)) {
+                        $valStr = $desiredValueMatches[1];
 
-                        /**
-                         * Get everything after the equal sign.
-                         */
-                        $desiredValue = preg_match('/=(.+)/', $operation, $desiredValueMatches);
-
-                        if ($desiredValueMatches) {
-                            $valStr = $desiredValueMatches[1];
-
-                            /*
-                             * Check if we need to convert any pieces of this expression.
-                             */
-                            if (\preg_match_all('/{(.*?)}/', $desiredValueMatches[1], $desVal)) {
-                                foreach ($desVal[1] as $i => $var) {
-                                    $valStr = str_replace($desVal[0][$i], $this->$var, $valStr);
-                                }
+                        if (preg_match_all('/{(.*?)}/', $desiredValueMatches[1], $desVal)) {
+                            foreach ($desVal[1] as $var) {
+                                $valStr = str_replace($desVal[0], $this->$var, $valStr);
                             }
-
-                            /**
-                             * Evaluate the expression and assign the result to the class instance's $property.
-                             */
-                            $eval = 'return '.$valStr.';';
-                            $newValue = eval($eval);
-                            $property->setValue($this, $newValue);
                         }
+
+                        $newValue = $this->evaluateExpression($valStr);
+                        $property->setValue($this, $newValue);
                     }
                 }
             }
@@ -190,22 +173,14 @@ class StateMachine
     public function turn($recurse = false)
     {
         $stateCopy = $this->states;
-
-        /**
-         * Before we check for possible transitions, we should handle
-         * any StateTicks if we have any.
-         */
         foreach ($this->stateTicks as $tick) {
-            if (array_key_exists($tick->state, $this->states)) {
-                $start = strtotime($tick->lastTick);
-                $now = strtotime(date('Y-m-d H:i:s'));
-                $diff = $now - $start;
-
-                if ($diff >= $tick->interval) {
-                    $numTicks = $diff / $tick->interval;
+            if (isset($this->states[$tick->state])) {
+                $secondsSinceLastTick = time() - strtotime($tick->lastTick);
+                if ($secondsSinceLastTick >= $tick->interval) {
+                    $numTicks = (int) ($secondsSinceLastTick / $tick->interval);
                     for ($i = 0; $i < $numTicks; ++$i) {
-                        $pt = new PostTransition($tick->expression);
-                        $this->doPostTransition($pt);
+                        $postTransition = new PostTransition($tick->expression);
+                        $this->doPostTransition($postTransition);
                     }
                     $tick->lastTick = date('Y-m-d H:i:s');
                 }
@@ -213,13 +188,11 @@ class StateMachine
         }
 
         foreach ($this->transitions as $transition) {
-            if (array_key_exists($transition->from, $this->states) || null === $transition->from) {
+            if (isset($this->states[$transition->from]) || null === $transition->from) {
                 if ($this->conditionsMet($transition->conditions)) {
-                    if (null !== $transition->from) {
-                        unset($this->states[$transition->from]);
-                    }
+                    unset($this->states[$transition->from]);
 
-                    if (!in_array($transition->to, $this->states) && null !== $transition->to) {
+                    if (null !== $transition->to && !in_array($transition->to, $this->states)) {
                         $this->states[$transition->to] = date('Y-m-d H:i:s');
                     }
 
@@ -230,7 +203,7 @@ class StateMachine
             }
         }
 
-        if (($this->states != $stateCopy) && $recurse) {
+        if ($this->states !== $stateCopy && $recurse) {
             $this->turn();
         }
     }
@@ -256,8 +229,6 @@ class StateMachine
      * Iterate indefinitely until this state machine does NOT have $state state.
      *
      * e.g. $human->activate(Human::ALIVE);
-     *
-     * @param int $state
      */
     public function activate(int $state)
     {

@@ -21,23 +21,16 @@ class Transition
 
     public function __construct($from = null, $to = null, ...$extras)
     {
-        if ($from) {
-            $this->from = $from;
-        }
+        $this->from = $from;
+        $this->to = $to;
 
-        if ($to) {
-            $this->to = $to;
-        }
+        foreach ($extras as $extra) {
+            if ($extra instanceof Condition) {
+                $this->conditions = $extra;
+            }
 
-        if ($extras) {
-            foreach ($extras as $extra) {
-                if ($extra instanceof Condition) {
-                    $this->conditions = $extra;
-                }
-
-                if ($extra instanceof PostTransition) {
-                    $this->postTransition = $extra;
-                }
+            if ($extra instanceof PostTransition) {
+                $this->postTransition = $extra;
             }
         }
     }

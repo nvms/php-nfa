@@ -13,7 +13,9 @@ $finder = PhpCsFixer\Finder::create()
     ->exclude(['build', 'vendor'])
     ->in(__DIR__);
 
-return PhpCsFixer\Config::create()
+$config = new PhpCsFixer\Config();
+
+return $config
     ->setFinder($finder)
     ->setUsingCache(true)
     ->setRules([

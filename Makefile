@@ -5,7 +5,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 tests: ## Executes the test suite
-	vendor/bin/phpunit
+	vendor/bin/phpunit --bootstrap vendor/autoload.php
 
 coverage: ## Executes the test suite and creates code coverage reports
 	vendor/bin/phpunit --coverage-html build/coverage

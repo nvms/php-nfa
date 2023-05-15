@@ -30,16 +30,16 @@ use PHPUnit\Framework\TestCase;
 
 class Human extends StateMachine
 {
-    const ALIVE = 0;
-    const ASLEEP = 1;
-    const AWAKE = 2;
-    const HUNGRY = 3;
-    const THIRSTY = 4;
-    const WALKING = 5;
-    const RUNNING = 6;
-    const BORED = 7;
-    const EATING = 8;
-    const EXHAUSTED = 9;
+    public const ALIVE = 0;
+    public const ASLEEP = 1;
+    public const AWAKE = 2;
+    public const HUNGRY = 3;
+    public const THIRSTY = 4;
+    public const WALKING = 5;
+    public const RUNNING = 6;
+    public const BORED = 7;
+    public const EATING = 8;
+    public const EXHAUSTED = 9;
 
     public $hunger = 0;
     public $thirst = 0;
@@ -57,23 +57,23 @@ class Animal extends StateMachine
 {
 }
 
-final class HumanTest extends TestCase
+final class StateMachineTest extends TestCase
 {
-    public function test_noInitialStateDefined(): void
+    public function testNoInitialStateDefined(): void
     {
         $animal = new Animal();
 
         $this->assertEquals(0, count($animal->states));
     }
 
-    public function test_nullStateName(): void
+    public function testNullStateName(): void
     {
         $animal = new Animal();
 
         $this->assertEquals(null, $animal->getStateNameById(null));
     }
 
-    public function test_conditionsNotMet(): void
+    public function testConditionsNotMet(): void
     {
         $human = new Human();
         $transition = new Transition(
@@ -85,7 +85,7 @@ final class HumanTest extends TestCase
         $this->assertEquals(false, $human->conditionsMet($transition->conditions));
     }
 
-    public function test_canCreateMachine(): void
+    public function testCanCreateMachine(): void
     {
         $human = new Human();
 
@@ -99,14 +99,14 @@ final class HumanTest extends TestCase
         );
     }
 
-    public function test_getStateNameById(): void
+    public function testGetStateNameById(): void
     {
         $human = new Human();
 
         $this->assertEquals('BORED', $human->getStateNameById(7));
     }
 
-    public function test_getStateNames(): void
+    public function testGetStateNames(): void
     {
         $human = new Human();
 
@@ -115,7 +115,7 @@ final class HumanTest extends TestCase
         $this->assertEquals($names, $human->getStateNames());
     }
 
-    public function test_addTransition(): void
+    public function testAddTransition(): void
     {
         $human = new Human();
 
@@ -133,7 +133,7 @@ final class HumanTest extends TestCase
         );
     }
 
-    public function test_postTransition(): void
+    public function testPostTransition(): void
     {
         $human = new Human();
 
@@ -151,7 +151,7 @@ final class HumanTest extends TestCase
         $this->assertTrue(0 === $human->sleepiness);
     }
 
-    public function test_canDoTransition(): void
+    public function testCanDoTransition(): void
     {
         $human = new Human();
 
@@ -175,7 +175,7 @@ final class HumanTest extends TestCase
         $this->assertTrue(0 === $human->sleepiness);
     }
 
-    public function test_transitionConditions(): void
+    public function testTransitionConditions(): void
     {
         $human = new Human();
 
@@ -202,7 +202,7 @@ final class HumanTest extends TestCase
         $this->assertTrue($human->is(Human::HUNGRY));
     }
 
-    public function test_saveLoad(): void
+    public function testSaveLoad(): void
     {
         $human = new Human();
 
@@ -230,7 +230,7 @@ final class HumanTest extends TestCase
         StateMachine::delete('human');
     }
 
-    public function test_stateTick(): void
+    public function testStateTick(): void
     {
         $human = new Human();
 
@@ -284,7 +284,7 @@ final class HumanTest extends TestCase
         $this->assertTrue(!$loaded->is(Human::ASLEEP));
     }
 
-    public function test_activate(): void
+    public function testActivate(): void
     {
         $human = new Human();
         $human->tick(
@@ -311,7 +311,7 @@ final class HumanTest extends TestCase
         $this->assertEquals(0, $human->sleepiness);
     }
 
-    public function test_new(): void
+    public function testNew(): void
     {
         $human = new Human();
         $this->assertEquals(0, $human->hunger);
@@ -323,7 +323,7 @@ final class HumanTest extends TestCase
         $this->assertTrue(spl_object_hash($human) !== spl_object_hash($bob));
     }
 
-    public function test_postTransitionCallable(): void
+    public function testPostTransitionCallable(): void
     {
         $called = false;
         $callback = function () use (&$called) {
@@ -346,7 +346,7 @@ final class HumanTest extends TestCase
         $this->assertEquals(0, $human->sleepiness);
     }
 
-    public function test_notInStateCondition(): void
+    public function testNotInStateCondition(): void
     {
         $human = new Human();
 
