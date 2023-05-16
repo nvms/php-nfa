@@ -139,26 +139,28 @@ class StateMachine
     {
         foreach ($postTransition->operations as $operation) {
             if (is_callable($operation)) {
-                call_user_func($operation);
+                $operation();
+                continue;
             }
 
-            if (is_string($operation) && preg_match_all('/<(.*?)>/', $operation, $matches)) {
-                foreach ($matches[1] as $variable) {
-                    $property = (new \ReflectionClass($this))->getProperty($variable);
-                    $property->setAccessible(true);
+            if (!is_string($operation) || !preg_match_all('/<(.*?)>/', $operation, $matches)) {
+                continue;
+            }
 
-                    if (preg_match('/=(.+)/', $operation, $desiredValueMatches)) {
-                        $valStr = $desiredValueMatches[1];
+            foreach ($matches[1] as $variable) {
+                $property = (new \ReflectionClass($this))->getProperty($variable);
+                $property->setAccessible(true);
 
-                        if (preg_match_all('/{(.*?)}/', $desiredValueMatches[1], $desVal)) {
-                            foreach ($desVal[1] as $var) {
-                                $valStr = str_replace($desVal[0], $this->$var, $valStr);
-                            }
+                if (preg_match('/=(.+)/', $operation, $desiredValueMatches)) {
+                    $valStr = $desiredValueMatches[1];
+
+                    if (preg_match_all('/{(.*?)}/', $valStr, $desVal)) {
+                        foreach ($desVal[1] as $var) {
+                            $valStr = str_replace($desVal[0], $this->$var, $valStr);
                         }
-
-                        $newValue = $this->evaluateExpression($valStr);
-                        $property->setValue($this, $newValue);
                     }
+
+                    $property->setValue($this, $this->evaluateExpression($valStr));
                 }
             }
         }
